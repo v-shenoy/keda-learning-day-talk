@@ -9,9 +9,8 @@
   "license": "MIT",
   "scripts": {
     "test": "gulp test",
-    "start": "gulp serve",
-    "build": "gulp build"
-  },
+    "start": "gulp serve"
+},
   "author": {
     "name": "Hakim El Hattab",
     "email": "hakim.elhattab@gmail.com",

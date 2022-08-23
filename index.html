@@ -174,6 +174,12 @@
 								Same purpose as TriggerAuthentication, but cluster-global.
 							</li>
 						</ul>
+
+						<aside class="notes">
+							<ul>
+								<li> ScaledJobs can be used to spawn jobs on the basis of Kubernetes external metrics. </li>
+							</ul>
+						</aside>
 					</section>
 				</section>
 
@@ -970,6 +976,48 @@
 					</section>
 				</section>
 
+				<section id="limitations">
+					<p class="small"> Limitations </p>
+					<hr class="fancy">
+					<ul class="small">
+						<li> No scaler for HTTP workloads. </li>
+						<li> Multi-cluster scaling not supported yet. </li>
+						<li>
+							Only one external metric server is supported in Kubernetes (<a href="https://github.com/kubernetes-sigs/custom-metrics-apiserver/issues/70"> issue</a>), consequently <span>&#8212;</span>
+							<ul class="small">
+								<li> Cannot deploy multiple KEDA installations within a cluster. </li>
+								<li> Cannot be used with other custom / external metric servers. </li>
+							</ul>
+						</li>
+					</ul>
+				</section>
+
+				<section id="keda-aks-add-on">
+					<p class="small"> AKS Add-on (Preview) </p>
+					<hr class="fancy">
+					<div class="two-column">
+						<ul class="small">
+							<li> Simplify application autoscaling on AKS. </li>
+							<li> Make KEDA easy to setup and use. </li>
+							<li> Provide official Microsoft support for issues. </li>
+							<li> Read about it <a href="https://docs.microsoft.com/en-us/azure/aks/keda-about"> here.</a></li>
+							<li> PS <span>&#8212;</span> Red Hat also <a href="https://cloud.redhat.com/blog/custom-metrics-autoscaler-on-openshift"> released </a> managed KEDA on OpenShift recently. </li>
+						</ul>
+						<img src="assets/images/aks-addon.png" alt="keda-aks-addon" width="650" style="margin: 10px;">
+					</div>
+				</section>
+
+				<section id="keda-http-add-on">
+					<p class="small"> HTTP Add-on (Beta) </p>
+					<hr class="fancy">
+					<ul class="small">
+						<li> KEDA does not provide scaling for HTTP workloads out of box. </li>
+						<li> It is technically possible to scale HTTP workloads using the Prometheus scaler which scrapes request metrics. </li>
+						<li> The HTTP Add-on aims to simplify this process. </li>
+						<li> Project Repo - <a href="https://github.com/kedacore/http-add-on"> kedacore/http-add-on </a></li>
+					</ul>
+				</section>
+
 				<section id="teamwork" class="medium">
 					<p class="small"> Work done by IDC team so far - </p>
 					<hr class="fancy">
@@ -992,9 +1040,11 @@
 					<hr class="fancy">
 					<ul class="small">
 						<li> Take the HTTP Add-on to GA. </li>
-						<li> Take the KEDA AKS Add-on to GA. </li>
-						<li> Introduce new scalers <span>&#8212;</span> OpenTelemetry, IoT Hubs, etc. </li>
+						<li> Take the AKS Add-on to GA. </li>
+						<li> Introduce new scalers <span>&#8212;</span> OpenTelemetry, Azure IoT Hubs, etc. </li>
+						<li> Improve Azure scalers. </li>
 						<li> Support for <a href="https://docs.google.com/document/d/14Z04AWiMBkSX88uiaVS-kg-8QjjNcDhVy6-u5FMUk_w/edit"> CloudEvents. </a> </li>
+						<li> Bug fixes, bug fixes, and bug fixes. </li>
 						<li> Maintain presence in the open-source community and continue providing support. </li>
 						<li> Help KEDA progress towards CNCF-graduated status. </li>
 					</ul>
