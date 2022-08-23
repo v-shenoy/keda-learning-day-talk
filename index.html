@@ -1,0 +1,1036 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title> KEDA &#8212; Learning Day Talk </title>
+
+		<link rel="stylesheet" href="dist/reset.css">
+		<link rel="stylesheet" href="dist/reveal.css">
+		<link rel="stylesheet" href="dist/theme/night.css">
+
+		<!-- Theme used for syntax highlighted code -->
+		<link rel="stylesheet" href="plugin/highlight/monokai.css">
+
+		<link rel="stylesheet" href="dist/index.css">
+		<link rel="icon" type="image/x-icon" href="/assets/images/keda-icon-simple.png">
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+
+				<section id="title-slide">
+					<p> Learning Day Talk on </p>
+					<img src="assets/images/keda-logo-transparent.png" alt="keda-logo" width="400" height="150">
+					<span style="display: block; font-size: 20px;"> Presented by: <b> Vighnesh Shenoy (@v-shenoy) </b> </span>
+
+
+					<aside class="notes">
+						<ul>
+							Things to cover -
+							<li> Autoscaling in Kubernetes, various types and ways </li>
+							<li> Why KEDA </li>
+							<li> High-level architecture </li>
+							<li> Components installed </li>
+							<li> Scalers along with demos </li>
+							<li> Some features - authentication, external scaler, jobs </li>
+							<li> Work that team has been doing on it </li>
+							<li> Road ahead </li>
+						</ul>
+					</aside>
+				</section>
+
+				<section id="brief-points" class="two-column">
+					<div style="margin-right: 20px;">
+						<img src="assets/images/keda-icon-simple.png" alt="keda-icon" width="350">
+					</div>
+					<div>
+						<p class="small"> <u class="keda-blue">K</u>ubernetes <u class="keda-blue">E</u>vent-<u class="keda-blue">D</u>riven <u class="keda-blue">A</u>utoscaling </p>
+						<hr class="fancy">
+						<ul class="small">
+							<li class="fragment"> CNCF <span>&#8212;</span> incubated project. </li>
+							<li class="fragment"> Maintained by Microsoft, Red Hat, and previously DocPlanner. </li>
+							<li class="fragment"> 50+ scalers provided out of box. </li>
+							<li class="fragment"> Scaling component for Azure Functions and Container Apps running on Kubernetes. </li>
+							<li class="fragment"> Website -  <a href="https://keda.sh/"> keda.sh </a> </li>
+						</ul>
+
+						<aside class="notes">
+							<ul>
+								<li> Lightweight component for autoscaling Kubernetes workloads in response to external events. </li>
+								<li> Entered CNCF Sandbox in March 9, 2020, moved to Incubating status in August, 2021. </li>
+								<li> Initiated by Microsoft along with Red Hat. </li
+							</ul>
+						</aside>
+					</div>
+				</section>
+				
+				<section id="links">
+					<p class="small"> Links <span>&#8212;</span> </p>
+					<hr class="fancy">
+					<ul class="small">
+						<li> Website -  <a href="https://keda.sh/"> keda.sh </a> </li>
+						<li> GitHub Organization - <a href="https://github.com/kedacore"> github.com/kedacore </a></li>
+						<li> Main Repo - <a href="https://github.com/kedacore/keda"> kedacore/keda </a></li>
+						<li> Helm Charts - <a href="https://github.com/kedacore/charts"> kedacore/charts </a></li>
+						<li> <a href="https://www.cncf.io/projects/keda/">  CNCF Page </a></li>
+					</ul>
+				</section>
+
+				<section id="native-autoscaling">
+					<section id="native-autoscaling-overview">
+						<p class="small"> Autoscaling in Kubernetes <span>&#8212;</span> Overview </p>
+						<hr class="fancy">
+						<div class="two-column">
+							<img src="assets/images/autoscaling.png" alt="autoscaling-types" width="500" style="margin: 10px">
+							<ul class="small">
+								<li>
+									<a href="https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler#cluster-autoscaler">Cluster Autoscaler</a>:
+									Adjust the <em>number of nodes</em> in the cluster.
+								</li>
+								<li>
+									<a href="https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler#vertical-pod-autoscaler"> Vertical Pod Autoscaler (VPA)</a>:
+									 Adjust the <em>resource requests and limits</em> of containers.
+								</li>
+								<li>
+									<a href="https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/"> Horizontal Pod Autoscaler (HPA)</a>:
+									 Adjust the <em>number of replicas</em> of an application.
+								</li>
+							</ul>
+						</div>
+
+						<aside class="notes">
+							<ul>
+								Cluster autoscaling
+								<li> Resources required - add nodes, resources underutilized - remove nodes </li>
+							</ul>
+						</aside>
+					</section>
+
+					<section id="cluster-autoscaling"> CA </section>
+					<section id="vpa"> VPA </section>
+				</section>
+
+				<section id="hpa">
+					<section id="hpa-overview">
+						<p class="small"> Horizontal Pod Autoscaling <span>&#8212;</span> Overview </p>
+						<hr class="fancy">
+					</section>
+					<section id="hpa-diagram">
+						<img src="assets/images/hpa.png" alt="hpa-working">
+					</section>
+				</section>
+
+				<section id="keda-architecture">
+					<p class="small"> Architecture  </p>
+					<hr class="fancy">
+					<div class="two-column">
+						<img src="assets/images/keda-architecture.png" alt="keda-architecture" width="550" style="margin: 10px">
+						<ul class="small"> Key roles:
+							<li style>
+								<b class="keda-blue"> Agent: </b>
+								<ul>
+									<li> Controller for CRDs. </li>
+									<li> Activation and deactivation (scaling to & from 0). </li>
+									<li> Creating / updating the underlying HPA. </li>
+									<li> Performed by the <em> keda-operator </em> deployment. </li>
+								</ul>
+							</li>
+							<li>
+								<b class="keda-blue"> Metrics: </b>
+								<ul class="small">
+									<li> Acts as an external metrics server exposing event data like queue length, blob count, etc. </li>
+									<li> Performed by the <em> keda-operator-metrics-apiserver </em> deployment. </li>
+								</ul>
+						</ul>
+
+						<aside class="notes">
+							<ul>
+								<li> Works alongside standard Kubernetes components like the HPA and extends its functionality. </li>
+								<li> Relies on the HPA for scaling from 1 to N. </li>
+								<li> Scaling from 0 -> 1 (min replicas) is handled by KEDA) </li>
+							</ul>
+						</aside>
+					</div>
+				</section>
+
+				<section id="keda-components">
+					<section id="custom-resources">
+						<p class="small"> Custom Resource Definitions </p>
+						<hr class="fancy">
+						<span class="small">When KEDA is installed, it creates four custom resources.</p>
+						<ul class="small">
+							<li class="fragment"> <span class="keda-blue"> ScaledObject (scaledobjects.keda.sh) </span> <span>&#8212;</span> <br/>
+								Mapping between event source and resource to be scaled.
+							</li>
+							<li class="fragment"> <span class="keda-blue"> ScaledJob (scaledjobs.keda.sh) </span> <span>&#8212;</span> <br/>
+								Mapping between event source and Kubernetes job.
+							</li>
+							<li class="fragment"> <span class="keda-blue"> TriggerAuthentication (triggerauthentications.keda.sh) </span> <span>&#8212;</span> <br/>
+								Authentication configuration for accessing event source (namespaced).
+							</li>
+							<li class="fragment"> <span class="keda-blue"> ClusterTriggerAuthentication(nclustertriggerauthentications.keda.sh) </span> <span>&#8212;</span> <br/>
+								Same purpose as TriggerAuthentication, but cluster-global.
+							</li>
+						</ul>
+					</section>
+				</section>
+
+				<section id="scalers">
+					<section>
+						<p class="small"> Scalers </p>
+						<hr class="fancy">
+						<ul class="small">
+							<li> A scaler is an object that will authenticate and connect to a particular event source to fetch the metrics. </li>
+							<li> Supported Azure scalers <span>&#8212;</span>
+								<ol class="small">
+									<li> <a href="https://keda.sh/docs/latest/scalers/azure-app-insights/"> Azure Application Insights </a> </li>
+									<li> <a href="https://keda.sh/docs/latest/scalers/azure-storage-blob/"> Azure Blob Storage </a> </li>
+									<li> <a href="https://keda.sh/docs/latest/scalers/azure-data-explorer/"> Azure Data Explorer </a> </li>
+									<li> <a href="https://keda.sh/docs/latest/scalers/azure-event-hub/"> Azure Event Hubs </a> </li>
+									<li> <a href="https://keda.sh/docs/latest/scalers/azure-log-analytics/"> Azure Log Analytics </a> </li>
+									<li> <a href="https://keda.sh/docs/latest/scalers/azure-monitor/"> Azure Monitor </a> </li>
+									<li> <a href="https://keda.sh/docs/latest/scalers/azure-pipelines/"> Azure Pipelines </a> </li>
+									<li> <a href="https://keda.sh/docs/latest/scalers/azure-service-bus/"> Azure Service Bus </a> </li>
+									<li> <a href="https://keda.sh/docs/latest/scalers/azure-storage-queue/"> Azure Storage Queue </a> </li>
+								</ol>
+							</li>
+							<li> Full list of scalers can be found <a href="https://keda.sh/docs/latest/scalers/"> here</a>. </li>
+						</ul>
+						<aside class="notes">
+							<ul>
+							</ul>
+						</aside>
+					</section>
+
+					<section class="small">
+						<p class="small"> Using ScaledObjects </p>
+						<hr class="fancy">
+						<div style="margin-bottom: 10px;">
+							Spec with detailed explanation can be found <a nhref="https://keda.sh/docs/latest/concepts/scaling-deployments/"> here </a>.
+						</div>
+
+						<div class="r-stack">
+							<pre class="yaml fragment">
+								<code data-line-numbers data-trim>
+									apiVersion: keda.sh/v1alpha1
+									kind: ScaledObject
+									metadata:
+										name: {so-name}
+										annotations:
+    										autoscaling.keda.sh/paused-replicas: "0"
+										# other metadata you want to add
+									spec:
+										scaleTargetRef:
+											apiVersion: {api-version-of-target-resource}
+											kind: {kind-of-target-resource}
+											name: {name-of-target-resource}
+											envSourceContainerName: {container-name}
+										pollingInterval: {duration-in-seconds}
+										cooldownPeriod: {duration-in-seconds}
+										idleReplicaCount: 0
+										minReplicaCount: 1
+										maxReplicaCount: 100
+										fallback:
+											failureThreshold: 3
+											replicas: 6
+										advanced:
+											restoreToOriginalReplicaCount: boolean
+											horizontalPodAutoScalerConfig:
+												name: {name-of-hpa}
+											behavior:
+												scaleDown:
+													stabilizationWindowSeconds: 300
+													policies:
+													- type: Percent
+													  value: 100
+													  periodSeconds: 15
+										triggers:
+										# list of triggers
+										  - type: {type}
+										  metadata:
+											# metadata specific to trigger
+										  authenticationRef:
+										    name: {name-of-triggerauth}
+										  metricType: {HPA-Metric-Type} # AverageValue / Value / Utilization
+								</code>
+							</pre>
+
+							<pre class="yaml fragment">
+								<code data-line-numbers="1-7" data-trim>
+									apiVersion: keda.sh/v1alpha1
+									kind: ScaledObject
+									metadata:
+										name: {so-name}
+										annotations:
+    										autoscaling.keda.sh/paused-replicas: "0"
+										# other metadata you want to add
+									spec:
+										scaleTargetRef:
+											apiVersion: {api-version-of-target-resource}
+											kind: {kind-of-target-resource}
+											name: {name-of-target-resource}
+											envSourceContainerName: {container-name}
+										pollingInterval: {duration-in-seconds}
+										cooldownPeriod: {duration-in-seconds}
+										idleReplicaCount: 0
+										minReplicaCount: 1
+										maxReplicaCount: 100
+										fallback:
+											failureThreshold: 3
+											replicas: 6
+										advanced:
+											restoreToOriginalReplicaCount: boolean
+											horizontalPodAutoScalerConfig:
+												name: {name-of-hpa}
+											behavior:
+												scaleDown:
+													stabilizationWindowSeconds: 300
+													policies:
+													- type: Percent
+													  value: 100
+													  periodSeconds: 15
+										triggers:
+										# list of triggers
+										- type: {type}
+										  metadata:
+											# metadata specific to trigger
+										  authenticationRef:
+										    name: {name-of-triggerauth}
+										  metricType: {HPA-Metric-Type} # AverageValue / Value / Utilization
+								</code>
+							</pre>
+
+							<pre class="yaml fragment">
+								<code data-line-numbers="8-13" data-trim>
+									apiVersion: keda.sh/v1alpha1
+									kind: ScaledObject
+									metadata:
+										name: {so-name}
+										annotations:
+    										autoscaling.keda.sh/paused-replicas: "0"
+										# other metadata you want to add
+									spec:
+										scaleTargetRef:
+											apiVersion: {api-version-of-target-resource}
+											kind: {kind-of-target-resource}
+											name: {name-of-target-resource}
+											envSourceContainerName: {container-name}
+										pollingInterval: {duration-in-seconds}
+										cooldownPeriod: {duration-in-seconds}
+										idleReplicaCount: 0
+										minReplicaCount: 1
+										maxReplicaCount: 100
+										fallback:
+											failureThreshold: 3
+											replicas: 6
+										advanced:
+											restoreToOriginalReplicaCount: boolean
+											horizontalPodAutoScalerConfig:
+												name: {name-of-hpa}
+											behavior:
+												scaleDown:
+													stabilizationWindowSeconds: 300
+													policies:
+													- type: Percent
+													  value: 100
+													  periodSeconds: 15
+										triggers:
+										# list of triggers
+										- type: {type}
+										  metadata:
+											# metadata specific to trigger
+										  authenticationRef:
+										    name: {name-of-triggerauth}
+										  metricType: {HPA-Metric-Type} # AverageValue / Value / Utilization
+								</code>
+							</pre>
+
+							<pre class="yaml fragment">
+								<code data-line-numbers="14-21" data-trim>
+									apiVersion: keda.sh/v1alpha1
+									kind: ScaledObject
+									metadata:
+										name: {so-name}
+										annotations:
+    										autoscaling.keda.sh/paused-replicas: "0"
+										# other metadata you want to add
+									spec:
+										scaleTargetRef:
+											apiVersion: {api-version-of-target-resource}
+											kind: {kind-of-target-resource}
+											name: {name-of-target-resource}
+											envSourceContainerName: {container-name}
+										pollingInterval: {duration-in-seconds}
+										cooldownPeriod: {duration-in-seconds}
+										idleReplicaCount: 0
+										minReplicaCount: 1
+										maxReplicaCount: 100
+										fallback:
+											failureThreshold: 3
+											replicas: 6
+										advanced:
+											restoreToOriginalReplicaCount: boolean
+											horizontalPodAutoScalerConfig:
+												name: {name-of-hpa}
+											behavior:
+												scaleDown:
+													stabilizationWindowSeconds: 300
+													policies:
+													- type: Percent
+													  value: 100
+													  periodSeconds: 15
+										triggers:
+										# list of triggers
+										- type: {type}
+											metadata:
+											# metadata specific to trigger
+											authenticationRef:
+											  name: {name-of-triggerauth}
+											metricType: {HPA-Metric-Type} # AverageValue / Value / Utilization
+								</code>
+							</pre>
+
+							<pre class="yaml fragment">
+								<code data-line-numbers="22-32" data-trim>
+									apiVersion: keda.sh/v1alpha1
+									kind: ScaledObject
+									metadata:
+										name: {so-name}
+										annotations:
+    										autoscaling.keda.sh/paused-replicas: "0"
+										# other metadata you want to add
+									spec:
+										scaleTargetRef:
+											apiVersion: {api-version-of-target-resource}
+											kind: {kind-of-target-resource}
+											name: {name-of-target-resource}
+											envSourceContainerName: {container-name}
+										pollingInterval: {duration-in-seconds}
+										cooldownPeriod: {duration-in-seconds}
+										idleReplicaCount: 0
+										minReplicaCount: 1
+										maxReplicaCount: 100
+										fallback:
+											failureThreshold: 3
+											replicas: 6
+										advanced:
+											restoreToOriginalReplicaCount: {boolean}
+											horizontalPodAutoScalerConfig:
+												name: {name-of-hpa}
+											behavior:
+												scaleDown:
+													stabilizationWindowSeconds: 300
+													policies:
+													- type: Percent
+													  value: 100
+													  periodSeconds: 15
+										triggers:
+										# list of triggers
+										- type: {type}
+										  metadata:
+										  	# metadata specific to trigger
+										  authenticationRef:
+										    name: {name-of-triggerauth}
+										  metricType: {HPA-Metric-Type} # AverageValue / Value / Utilization
+
+								</code>
+							</pre>
+
+							<pre class="yaml fragment">
+								<code data-line-numbers="33-40" data-trim>
+									apiVersion: keda.sh/v1alpha1
+									kind: ScaledObject
+									metadata:
+										name: {so-name}
+										annotations:
+    										autoscaling.keda.sh/paused-replicas: "0"
+										# other metadata you want to add
+									spec:
+										scaleTargetRef:
+											apiVersion: {api-version-of-target-resource}
+											kind: {kind-of-target-resource}
+											name: {name-of-target-resource}
+											envSourceContainerName: {container-name}
+										pollingInterval: {duration-in-seconds}
+										cooldownPeriod: {duration-in-seconds}
+										idleReplicaCount: 0
+										minReplicaCount: 1
+										maxReplicaCount: 100
+										fallback:
+											failureThreshold: 3
+											replicas: 6
+										advanced:
+											restoreToOriginalReplicaCount: {boolean}
+											horizontalPodAutoScalerConfig:
+												name: {name-of-hpa}
+											behavior:
+												scaleDown:
+													stabilizationWindowSeconds: 300
+													policies:
+													- type: Percent
+													  value: 100
+													  periodSeconds: 15
+										triggers:
+										# list of triggers
+										- type: {type}
+										  metadata:
+										  	# metadata specific to trigger
+										  authenticationRef:
+										    name: {name-of-triggerauth}
+										  metricType: {HPA-Metric-Type} # AverageValue / Value / Utilization
+
+								</code>
+							</pre>
+						</div>
+						<aside class="notes">
+							<ul>
+							</ul>
+						</aside>
+					</section>
+				</section>
+
+				<section class="small">
+					<p class="small"> Configuring authentication methods with TriggerAuthentications </p>
+					<hr class="fancy">
+					<div style="margin-bottom: 10px;">
+						Spec with detailed explanation can be found <a href="https://keda.sh/docs/latest/concepts/authentication/"> here </a>.
+					</div>
+
+					<div class="r-stack">
+						<pre class="yaml fragment">
+							<code data-line-numbers data-trim>
+								apiVersion: keda.sh/v1alpha1
+								kind: TriggerAuthentication
+								metadata:
+									name: {ta-name}
+									namespace: {ta-namesspace} # Must be same as ScaledObject namespace
+									annotations:
+									# other metadata you want to add
+								spec:
+									podIdentity
+										provider: none | azure | azure-workload | aws-eks | aws-kiam
+										identityId: {identity-id}
+									secretTargetRef:
+									- parameter: {parameter-in-so-trigger-metadata}
+									  name: {name-of-k8s-secret}
+									  key: {key-within-k8s-secret}
+									env:
+									- parameter: {parameter-in-so-trigger-metadata}
+									  name: {name-of-env-var}
+									  containerName: {container-within-target-resource}
+									hashiCorpVault:
+										address: {vault-address}
+									  	namespace: {vault-namespace}
+									  	authentication: token | kubernetes
+									  	role: {vault-role}
+									  	mount: {vault-mount}
+									  	credential:
+									   	 token: {vault-token}
+											serviceAccount: {path-to-service-account-file}
+									  	secrets:
+											- parameter: {parameter-in-so-trigger-metadata}
+											  name: {vault-secret-path}
+											  path: {vault-secret-key}
+										azureKeyVault:
+											vaultURI: {key-vault-address}
+											credentials:
+												clientId: {azure-ad-client-id}
+												clientSecret:
+													valueFrom:
+													secretKeyRef:
+														name: {k8s-secret-with-azure-ad-secret}
+														key: {key-within-the-secret}
+												tenantId: {azure-ad-tenant-id}
+											cloud:
+												type: AzurePublicCloud | AzureUSGovernmentCloud | AzureChinaCloud | AzureGermanCloud | Private # Required.
+												keyVaultResourceURL: {key-vault-resource-url-for-cloud}
+												activeDirectoryEndpoint: {active-directory-endpoint-for-cloud}
+											secrets:
+											- parameter: {param-name-used-for-auth}
+											  name: {key-vault-secret-name}
+											  version: {key-vault-secret-version}
+							</code>
+						</pre>
+
+						<pre class="yaml fragment">
+							<code data-line-numbers="1-7" data-trim>
+								apiVersion: keda.sh/v1alpha1
+								kind: TriggerAuthentication
+								metadata:
+									name: {ta-name}
+									namespace: {ta-namesspace} # Must be same as ScaledObject namespace
+									annotations:
+									# other metadata you want to add
+								spec:
+									podIdentity
+										provider: none | azure | azure-workload | aws-eks | aws-kiam
+										identityId: {identity-id}
+									secretTargetRef:
+									- parameter: {parameter-in-so-trigger-metadata}
+									  name: {name-of-k8s-secret}
+									  key: {key-within-k8s-secret}
+									env:
+									- parameter: {parameter-in-so-trigger-metadata}
+									  name: {name-of-env-var}
+									  containerName: {container-within-target-resource}
+									hashiCorpVault:
+										address: {vault-address}
+									  	namespace: {vault-namespace}
+									  	authentication: token | kubernetes
+									  	role: {vault-role}
+									  	mount: {vault-mount}
+									  	credential:
+									   	 token: {vault-token}
+											serviceAccount: {path-to-service-account-file}
+									  	secrets:
+											- parameter: {parameter-in-so-trigger-metadata}
+											  name: {vault-secret-path}
+											  path: {vault-secret-key}
+										azureKeyVault:
+											vaultURI: {key-vault-address}
+											credentials:
+												clientId: {azure-ad-client-id}
+												clientSecret:
+													valueFrom:
+													secretKeyRef:
+														name: {k8s-secret-with-azure-ad-secret}
+														key: {key-within-the-secret}
+												tenantId: {azure-ad-tenant-id}
+											cloud:
+												type: AzurePublicCloud | AzureUSGovernmentCloud | AzureChinaCloud | AzureGermanCloud | Private # Required.
+												keyVaultResourceURL: {key-vault-resource-url-for-cloud}
+												activeDirectoryEndpoint: {active-directory-endpoint-for-cloud}
+											secrets:
+											- parameter: {param-name-used-for-auth}
+											  name: {key-vault-secret-name}
+											  version: {key-vault-secret-version}
+							</code>
+						</pre>
+
+						<pre class="yaml fragment">
+							<code data-line-numbers="8-11" data-trim>
+								apiVersion: keda.sh/v1alpha1
+								kind: TriggerAuthentication
+								metadata:
+									name: {ta-name}
+									namespace: {ta-namesspace} # Must be same as ScaledObject namespace
+									annotations:
+									# other metadata you want to add
+								spec:
+									podIdentity
+										provider: none | azure | azure-workload | aws-eks | aws-kiam
+										identityId: {identity-id}
+									secretTargetRef:
+									- parameter: {parameter-in-so-trigger-metadata}
+									  name: {name-of-k8s-secret}
+									  key: {key-within-k8s-secret}
+									env:
+									- parameter: {parameter-in-so-trigger-metadata}
+									  name: {name-of-env-var}
+									  containerName: {container-within-target-resource}
+									hashiCorpVault:
+										address: {vault-address}
+									  	namespace: {vault-namespace}
+									  	authentication: token | kubernetes
+									  	role: {vault-role}
+									  	mount: {vault-mount}
+									  	credential:
+									   	 token: {vault-token}
+											serviceAccount: {path-to-service-account-file}
+									  	secrets:
+											- parameter: {parameter-in-so-trigger-metadata}
+											  name: {vault-secret-path}
+											  path: {vault-secret-key}
+										azureKeyVault:
+											vaultURI: {key-vault-address}
+											credentials:
+												clientId: {azure-ad-client-id}
+												clientSecret:
+													valueFrom:
+													secretKeyRef:
+														name: {k8s-secret-with-azure-ad-secret}
+														key: {key-within-the-secret}
+												tenantId: {azure-ad-tenant-id}
+											cloud:
+												type: AzurePublicCloud | AzureUSGovernmentCloud | AzureChinaCloud | AzureGermanCloud | Private # Required.
+												keyVaultResourceURL: {key-vault-resource-url-for-cloud}
+												activeDirectoryEndpoint: {active-directory-endpoint-for-cloud}
+											secrets:
+											- parameter: {param-name-used-for-auth}
+											  name: {key-vault-secret-name}
+											  version: {key-vault-secret-version}
+							</code>
+						</pre>
+
+						<pre class="yaml fragment">
+							<code data-line-numbers="12-15" data-trim>
+								apiVersion: keda.sh/v1alpha1
+								kind: TriggerAuthentication
+								metadata:
+									name: {ta-name}
+									namespace: {ta-namesspace} # Must be same as ScaledObject namespace
+									annotations:
+									# other metadata you want to add
+								spec:
+									podIdentity
+										provider: none | azure | azure-workload | aws-eks | aws-kiam
+										identityId: {identity-id}
+									secretTargetRef:
+									- parameter: {parameter-in-so-trigger-metadata}
+									  name: {name-of-k8s-secret}
+									  key: {key-within-k8s-secret}
+									env:
+									- parameter: {parameter-in-so-trigger-metadata}
+									  name: {name-of-env-var}
+									  containerName: {container-within-target-resource}
+									hashiCorpVault:
+										address: {vault-address}
+									  	namespace: {vault-namespace}
+									  	authentication: token | kubernetes
+									  	role: {vault-role}
+									  	mount: {vault-mount}
+									  	credential:
+									   	 token: {vault-token}
+											serviceAccount: {path-to-service-account-file}
+									  	secrets:
+											- parameter: {parameter-in-so-trigger-metadata}
+											  name: {vault-secret-path}
+											  path: {vault-secret-key}
+										azureKeyVault:
+											vaultURI: {key-vault-address}
+											credentials:
+												clientId: {azure-ad-client-id}
+												clientSecret:
+													valueFrom:
+													secretKeyRef:
+														name: {k8s-secret-with-azure-ad-secret}
+														key: {key-within-the-secret}
+												tenantId: {azure-ad-tenant-id}
+											cloud:
+												type: AzurePublicCloud | AzureUSGovernmentCloud | AzureChinaCloud | AzureGermanCloud | Private # Required.
+												keyVaultResourceURL: {key-vault-resource-url-for-cloud}
+												activeDirectoryEndpoint: {active-directory-endpoint-for-cloud}
+											secrets:
+											- parameter: {param-name-used-for-auth}
+											  name: {key-vault-secret-name}
+											  version: {key-vault-secret-version}
+							</code>
+						</pre>
+
+						<pre class="yaml fragment">
+							<code data-line-numbers="16-19" data-trim>
+								apiVersion: keda.sh/v1alpha1
+								kind: TriggerAuthentication
+								metadata:
+									name: {ta-name}
+									namespace: {ta-namesspace} # Must be same as ScaledObject namespace
+									annotations:
+									# other metadata you want to add
+								spec:
+									podIdentity
+										provider: none | azure | azure-workload | aws-eks | aws-kiam
+										identityId: {identity-id}
+									secretTargetRef:
+									- parameter: {parameter-in-so-trigger-metadata}
+									  name: {name-of-k8s-secret}
+									  key: {key-within-k8s-secret}
+									env:
+									- parameter: {parameter-in-so-trigger-metadata}
+									  name: {name-of-env-var}
+									  containerName: {container-within-target-resource}
+									hashiCorpVault:
+										address: {vault-address}
+									  	namespace: {vault-namespace}
+									  	authentication: token | kubernetes
+									  	role: {vault-role}
+									  	mount: {vault-mount}
+									  	credential:
+									   	 token: {vault-token}
+											serviceAccount: {path-to-service-account-file}
+									  	secrets:
+											- parameter: {parameter-in-so-trigger-metadata}
+											  name: {vault-secret-path}
+											  path: {vault-secret-key}
+										azureKeyVault:
+											vaultURI: {key-vault-address}
+											credentials:
+												clientId: {azure-ad-client-id}
+												clientSecret:
+													valueFrom:
+													secretKeyRef:
+														name: {k8s-secret-with-azure-ad-secret}
+														key: {key-within-the-secret}
+												tenantId: {azure-ad-tenant-id}
+											cloud:
+												type: AzurePublicCloud | AzureUSGovernmentCloud | AzureChinaCloud | AzureGermanCloud | Private # Required.
+												keyVaultResourceURL: {key-vault-resource-url-for-cloud}
+												activeDirectoryEndpoint: {active-directory-endpoint-for-cloud}
+											secrets:
+											- parameter: {param-name-used-for-auth}
+											  name: {key-vault-secret-name}
+											  version: {key-vault-secret-version}
+							</code>
+						</pre>
+
+						<pre class="yaml fragment">
+							<code data-line-numbers="20-32" data-trim>
+								apiVersion: keda.sh/v1alpha1
+								kind: TriggerAuthentication
+								metadata:
+									name: {ta-name}
+									namespace: {ta-namesspace} # Must be same as ScaledObject namespace
+									annotations:
+									# other metadata you want to add
+								spec:
+									podIdentity
+										provider: none | azure | azure-workload | aws-eks | aws-kiam
+										identityId: {identity-id}
+									secretTargetRef:
+									- parameter: {parameter-in-so-trigger-metadata}
+									  name: {name-of-k8s-secret}
+									  key: {key-within-k8s-secret}
+									env:
+									- parameter: {parameter-in-so-trigger-metadata}
+									  name: {name-of-env-var}
+									  containerName: {container-within-target-resource}
+									hashiCorpVault:
+										address: {vault-address}
+									  	namespace: {vault-namespace}
+									  	authentication: token | kubernetes
+									  	role: {vault-role}
+									  	mount: {vault-mount}
+									  	credential:
+									   	 token: {vault-token}
+											serviceAccount: {path-to-service-account-file}
+									  	secrets:
+											- parameter: {parameter-in-so-trigger-metadata}
+											  name: {vault-secret-path}
+											  path: {vault-secret-key}
+										azureKeyVault:
+											vaultURI: {key-vault-address}
+											credentials:
+												clientId: {azure-ad-client-id}
+												clientSecret:
+													valueFrom:
+													secretKeyRef:
+														name: {k8s-secret-with-azure-ad-secret}
+														key: {key-within-the-secret}
+												tenantId: {azure-ad-tenant-id}
+											cloud:
+												type: AzurePublicCloud | AzureUSGovernmentCloud | AzureChinaCloud | AzureGermanCloud | Private # Required.
+												keyVaultResourceURL: {key-vault-resource-url-for-cloud}
+												activeDirectoryEndpoint: {active-directory-endpoint-for-cloud}
+											secrets:
+											- parameter: {param-name-used-for-auth}
+											  name: {key-vault-secret-name}
+											  version: {key-vault-secret-version}
+							</code>
+						</pre>
+
+						<pre class="yaml fragment">
+							<code data-line-numbers="33-50" data-trim>
+								apiVersion: keda.sh/v1alpha1
+								kind: TriggerAuthentication
+								metadata:
+									name: {ta-name}
+									namespace: {ta-namesspace} # Must be same as ScaledObject namespace
+									annotations:
+									# other metadata you want to add
+								spec:
+									podIdentity
+										provider: none | azure | azure-workload | aws-eks | aws-kiam
+										identityId: {identity-id}
+									secretTargetRef:
+									- parameter: {parameter-in-so-trigger-metadata}
+									  name: {name-of-k8s-secret}
+									  key: {key-within-k8s-secret}
+									env:
+									- parameter: {parameter-in-so-trigger-metadata}
+									  name: {name-of-env-var}
+									  containerName: {container-within-target-resource}
+									hashiCorpVault:
+										address: {vault-address}
+									  	namespace: {vault-namespace}
+									  	authentication: token | kubernetes
+									  	role: {vault-role}
+									  	mount: {vault-mount}
+									  	credential:
+									   	 token: {vault-token}
+											serviceAccount: {path-to-service-account-file}
+									  	secrets:
+											- parameter: {parameter-in-so-trigger-metadata}
+											  name: {vault-secret-path}
+											  path: {vault-secret-key}
+										azureKeyVault:
+											vaultURI: {key-vault-address}
+											credentials:
+												clientId: {azure-ad-client-id}
+												clientSecret:
+													valueFrom:
+													secretKeyRef:
+														name: {k8s-secret-with-azure-ad-secret}
+														key: {key-within-the-secret}
+												tenantId: {azure-ad-tenant-id}
+											cloud:
+												type: AzurePublicCloud | AzureUSGovernmentCloud | AzureChinaCloud | AzureGermanCloud | Private # Required.
+												keyVaultResourceURL: {key-vault-resource-url-for-cloud}
+												activeDirectoryEndpoint: {active-directory-endpoint-for-cloud}
+											secrets:
+											- parameter: {param-name-used-for-auth}
+											  name: {key-vault-secret-name}
+											  version: {key-vault-secret-version}
+							</code>
+						</pre>
+					</section>
+
+				<section id="external-scaler">
+					<section id="external-scaler-overview">
+						<p class="small"> Extensibility with External scalers </p>
+						<hr class="fancy">
+						<ul class="small">
+							<li> KEDA ships with a number of built-in scalers. </li>
+							<li> However, users might have scaler needs that are specific. </li>
+							<li> For such use-cases, KEDA allows for pluggable scalers (referred to as <a href="https://keda.sh/docs/latest/concepts/external-scalers/">
+								external scalers
+							</a>) that can be used via <a href="https://grpc.io/"> gRPC</a>. </li>
+							<li> Users need to write an external scaler that exposes the metrics and implements a gRPC interface. </li>
+							<li> These scalers can be in any language, not just Go. </li>
+							<li> In fact, users can override default scalers via external scalers. </li>
+						</ul>
+					</section>
+
+					<section id="external-scaler-interface" class="medium">
+						<p class="small"> Built-in scaler interface </p>
+						<pre class="go fragment fade-in">
+							<code data-line-numbers data-trim>
+							type Scaler interface {
+								GetMetrics(ctx context.Context, metricName string, metricSelector labels.Selector)
+									([]external_metrics.ExternalMetricValue, error)
+								GetMetricSpecForScaling() []v2beta2.MetricSpec
+								IsActive(ctx context.Context) (bool, error)
+								Close() error
+							}
+
+							type PushScaler interface {
+								Scaler
+								Run(ctx context.Context, active chan<- bool)
+							}
+							</code>
+						</pre>
+
+						<p class="small"> External Scaler gRPC interface </p>
+						<pre class="grpc fragment">
+							<code data-line-numbers data-trim>
+							service ExternalScaler {
+								rpc IsActive(ScaledObjectRef) returns (IsActiveResponse) {}
+								rpc StreamIsActive(ScaledObjectRef) returns (stream IsActiveResponse) {}
+								rpc GetMetricSpec(ScaledObjectRef) returns (GetMetricSpecResponse) {}
+								rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse) {}
+							}
+							</code>
+						</pre>
+					</section>
+
+					<section id="external-scaler-so" class="medium">
+						<p class="small"> Sample ScaledObject </p>
+						<hr class="fancy">
+						<pre class="yaml">
+							<code data-line-numbers data-trim>
+								apiVersion: keda.sh/v1alpha1
+								kind: ScaledObject
+								metadata:
+									name: sample-external-scaler-so
+									namespace: sample-ns
+								spec:
+									scaleTargetRef:
+										name: sample-scale-deployment
+									triggers:
+									- type: external
+									  scalerAddress: external-scaler-k8s-service:8080
+									  # these parameters will be passed to the gRPC calls made to the external scaler
+									  param1: value1
+									  param2: value2
+									  # other params
+							</code>
+						</pre>
+					</section>
+
+					<section id="cosmosdb-external-scaler" class="medium">
+						<p class="small"> Azure CosmosDB External Scaler</p>
+						<hr class="fancy">
+						<ul class="small">
+							<li> Repo - <a href="https://github.com/kedacore/external-scaler-azure-cosmos-db"> kedacore/external-scaler-azure-cosmos-db </a></li>
+							<li> Officially supported external scaler for CosmosDB change-feed consumer applications </li>
+							<li> Written as an external scaler (in .NET) due to lack of feature-rich CosmosDB Go SDK.</li>
+						</ul>
+
+						<img src="assets/images/cosmosdb-architecture.png" alt="cosmosdb-external-scaler-architecture" width="500">
+					</section>
+				</section>
+
+				<section id="teamwork" class="medium">
+					<p class="small"> Work done by IDC team so far - </p>
+					<hr class="fancy">
+					<ul class="small">
+						<li> Develop and release the CosmosDB external scaler. </a></li>
+						<li> Implement community requested features. To name a few <span>&#8212;</span>  
+							<ul class="small">
+								<li> Authentication via Azure Key Vault. </li>
+								<li> Support for non-public clouds for Azure scalers. </li>
+								<li> Azure Workload Identity for pod-based authentication. </li>
+							</ul>
+						</li>
+						<li> Improve end-to-end testing process by migrating all e2e tests to Go (they were in TypeScript earlier, don't ask why). </li>
+						<li> Release preview for the KEDA AKS Add-on. </li>
+					</ul>
+				</section>
+
+				<section id="road-ahead" class="medium">
+					<p class="small"> Road ahead <span>&#8212;</span> </p>
+					<hr class="fancy">
+					<ul class="small">
+						<li> Take the HTTP Add-on to GA. </li>
+						<li> Take the KEDA AKS Add-on to GA. </li>
+						<li> Introduce new scalers <span>&#8212;</span> OpenTelemetry, IoT Hubs, etc. </li>
+						<li> Support for <a href="https://docs.google.com/document/d/14Z04AWiMBkSX88uiaVS-kg-8QjjNcDhVy6-u5FMUk_w/edit"> CloudEvents. </a> </li>
+						<li> Maintain presence in the open-source community and continue providing support. </li>
+						<li> Help KEDA progress towards CNCF-graduated status. </li>
+					</ul>
+				</section>
+
+				<section id="tools">
+					<p class="small"> Made with <span>&#8212;</span> </p>
+					<ul class="small">
+						<li> Presentation <span>&#8212;</span> <a href="https://revealjs.com/"> reveal.js </a> </li>
+						<li> Diagrams <span>&#8212;</span> <a href="https://excalidraw.com/"> Excalidraw </a> </li>
+						<li> Hosting <span>&#8212;</span> <a href="https://azure.microsoft.com/en-us/services/app-service/static/"> Static Web Apps </a> ;)  </li>
+					</ul>
+					<hr class="fancy">
+					<p> Thank you! </p>
+				</section>
+			</div>
+		</div>
+
+		<script src="dist/reveal.js"></script>
+		<script src="plugin/notes/notes.js"></script>
+		<script src="plugin/markdown/markdown.js"></script>
+		<script src="plugin/highlight/highlight.js"></script>
+		<script src="plugin/pdfexport/pdfexport.js"></script>
+		<script src="plugin/helpbutton/helpbutton.js"></script>
+		<script>
+			// More info about initialization & config:
+			// - https://revealjs.com/initialization/
+			// - https://revealjs.com/config/
+			Reveal.initialize({
+				hash: true,
+
+				slideNumber: true,
+
+				// Learn about plugins: https://revealjs.com/plugins/
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, PdfExport, HelpButton]
+			});
+		</script>
+	</body>
+</html>
