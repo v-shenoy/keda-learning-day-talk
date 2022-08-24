@@ -8,7 +8,7 @@
 
 		<link rel="stylesheet" href="dist/reset.css">
 		<link rel="stylesheet" href="dist/reveal.css">
-		<link rel="stylesheet" href="dist/theme/night.css">
+		<link rel="stylesheet" href="dist/theme/blood.css">
 
 		<!-- Theme used for syntax highlighted code -->
 		<link rel="stylesheet" href="plugin/highlight/monokai.css">
@@ -42,28 +42,49 @@
 				</section>
 
 				<section id="brief-points" class="two-column">
-					<div style="margin-right: 20px;">
-						<img src="assets/images/keda-icon-simple.png" alt="keda-icon" width="350">
-					</div>
-					<div>
-						<p class="small"> <u class="keda-blue">K</u>ubernetes <u class="keda-blue">E</u>vent-<u class="keda-blue">D</u>riven <u class="keda-blue">A</u>utoscaling </p>
-						<hr class="fancy">
-						<ul class="small">
-							<li class="fragment"> CNCF <span>&#8212;</span> incubated project. </li>
-							<li class="fragment"> Maintained by Microsoft, Red Hat, and previously DocPlanner. </li>
-							<li class="fragment"> 50+ scalers provided out of box. </li>
-							<li class="fragment"> Scaling component for Azure Functions and Container Apps running on Kubernetes. </li>
-							<li class="fragment"> Website -  <a href="https://keda.sh/"> keda.sh </a> </li>
-						</ul>
-
-						<aside class="notes">
-							<ul>
-								<li> Lightweight component for autoscaling Kubernetes workloads in response to external events. </li>
-								<li> Entered CNCF Sandbox in March 9, 2020, moved to Incubating status in August, 2021. </li>
-								<li> Initiated by Microsoft along with Red Hat. </li
+					<section>
+						<div style="margin-right: 20px;">
+							<img src="assets/images/keda-icon-simple.png" alt="keda-icon" width="350">
+						</div>
+						<div>
+							<p class="small"> <u class="keda-blue">K</u>ubernetes <u class="keda-blue">E</u>vent-<u class="keda-blue">D</u>riven <u class="keda-blue">A</u>utoscaling </p>
+							<hr class="fancy">
+							<ul class="small">
+								<li class="fragment"> CNCF <span>&#8212;</span> incubated project. </li>
+								<li class="fragment"> Maintained by Microsoft, Red Hat, and previously DocPlanner. </li>
+								<li class="fragment"> 50+ scalers provided out of box. </li>
+								<li class="fragment"> Scaling component for Azure Functions and Container Apps running on Kubernetes. </li>
+								<li class="fragment"> Website -  <a href="https://keda.sh/"> keda.sh </a> </li>
 							</ul>
+	
+							<aside class="notes">
+								<ul>
+									<li> Lightweight component for autoscaling Kubernetes workloads in response to external events. </li>
+									<li> Entered CNCF Sandbox in March 9, 2020, moved to Incubating status in August, 2021. </li>
+									<li> Initiated by Microsoft along with Red Hat. </li>
+									<li> Also used by Azure Defender and Financial Revenue Service </li>
+								</ul>
+							</aside>
+						</div>
+					</section>
+
+					<section>
+						<p class="small"> KEDA History </p>
+						<hr class="fancy">
+						<img src="assets/images/keda-history.png" alt="keda-history">
+						<aside class="notes">
+							Also used by Blizzard, Riot, IKEA (NDAs)
 						</aside>
-					</div>
+					</section>
+
+					<section>
+						<p class="small"> KEDA Users </p>
+						<hr class="fancy">
+						<img src="assets/images/keda-users.png" alt="keda-users" height="500">
+						<aside class="notes">
+							Also used by Blizzard, Riot, IKEA (NDAs)
+						</aside>
+					</section>
 				</section>
 				
 				<section id="links">
@@ -108,17 +129,115 @@
 						</aside>
 					</section>
 
-					<section id="cluster-autoscaling"> CA </section>
-					<section id="vpa"> VPA </section>
+					<section id="cluster-autoscaling">  
+						<p class="small">Cluster Autoscaler (CA) </p>
+						<hr class="fancy">
+						<ul class="small">
+							<li> The ClusterAutoscaler scales the nodes in a Kubernetes cluster when <span>&#8212;</span> 
+								<ul class="small">
+									<li> There exist pods that failed to run in the cluster (due to insufficient resources). </li>
+									<li> There are underutilized nodes in the cluster and their pods can be placed on other existing nodes. </li>
+								</ul>
+							</li>
+							<li> Most cloud providers support ClusterAutoscalers along with cloud-specific configurations for scaling 
+								(<a href="https://docs.microsoft.com/en-us/azure/aks/cluster-autoscaler">doc</a>  for Azure). </li>
+							<li> A particular limitation is that the CAs do not check CPU / Memory usage. So, there might be pods that request								resources and are unused, which is inefficient.
+							</li>
+							<li> Slower than pod scaling because of the time to provision and add a node to the cluster. </li>
+						</ul>
+
+						<aside class="notes">
+							<ul>
+								<li> It periodically checks (default: 10s) if there are pods that the K8s shecduler could not schedule onto a node. Ex - pod requests more CPU than available on any of the existing nodes.  </li>
+								<li> Scale down when pods utilize resources used on a node < 50% and all pods on the node can be accomodated elsewhere. </li>
+							</ul>
+						</aside>
+					</section>
+					<section>
+						<img src="assets/images/ca.png" alt="cluster-autoscaler-flow">
+					</section>
+					<section id="vpa">  
+						<p class="small"> Vertical Pod Autoscaler (VPA) </p>
+						<hr class="fancy">
+						<ul class="small">
+							<li> <b> Requests: </b> Minimum amount of resource required by the container. </li>
+							<li> <b> Limit: </b> Maximum amount of resource which can be used by the container./li>
+							<li> Three main components - <em> VPA Recommender </em>, <em> VPA Updater </em>, and 
+								<em> VPA Admission Controller</em>.</li>
+							<li> Do not use VPA & HPA together. Can lead to undesirable behaviour. </li>
+						</ul>
+
+						<aside class="notes">
+							<ul>
+								<li> Request - 256MB, K8s guarantees 256MB to the application  </li>
+								<li> Recommender monitors utilization, looks at metric history, and lowers/ raises requests, limits. </li>
+								<li> Updater removes pods that need new resource limits. </li>
+								<li> Admission Controller changes CPU, memory settings before new pod starts after being evicted by updater. </li>
+							</ul>
+						</aside>
+					</section>
+
+					<section>
+						<img src="assets/images/vpa.png" alt="vpa-flow">
+					</section>
 				</section>
 
 				<section id="hpa">
 					<section id="hpa-overview">
 						<p class="small"> Horizontal Pod Autoscaling <span>&#8212;</span> Overview </p>
 						<hr class="fancy">
+						<ul class="small">
+							<li> The HorizontalPodAutoscaler (HPA) updates the number of instances of a Kubernetes workload resources to match the demand. </li>
+							<li> HPA is implemented as a resource (kind: HorizontalPodAutoscaler), and a controller. </li>
+							<li> The controller runs within the Kubernetes control plane, periodically fetching metrics and adjusting the scale of its target. </li>
+							<li> <a href="https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/"> HPA Walkthrough</a>. </li>
+						</ul>
+
+						<hr class="fancy">
+
+						<p class="small"> Scale Formula: </p>
+						<div class="small">
+							$ desiredReplicas = ceil\left(currentReplicas \times \dfrac{currentMetricValue}{desiredMetricValue}\right) $
+						</div>
+						<aside class="notes">
+							<ul>
+								<li>  Default loop duration - 15s  </li>
+							</ul>
+						</aside>
 					</section>
 					<section id="hpa-diagram">
 						<img src="assets/images/hpa.png" alt="hpa-working">
+					</section>
+					<section id="hpa-metric-typ">
+						<p class="small"> HPA <span>&#8212;</span> Metric Types </p>
+						<ul class="small">
+							<li> <b>Per-pod resource metrics:</b> CPU or Memory. The controller calculates utilization for the defined resource & pods, and uses it to scale. </li>
+							<li> <b>Per-pod custom metrics:</b> Same as above, but raw values are used instead of utilization. </li>
+							<li> <b>Object, external metrics:</b> Single metric is fetched and compared with target (can optionally be divided by number of pod).</li>
+						</ul>
+					</section>
+					<aside class="notes">
+						<ul>
+							<li> Resource metrics - CPU & Memory. Takes mean across all pods. </li>
+							<li> Custom Metrics - Metrics emitted from within the Kubernetes cluster </li>
+							<li> External metrics - Metrics emitted from outside the cluster. </li>
+							<li> </li>
+						</ul>
+					</aside>
+					<section> 
+						<p class="small"> HPA Spec. </p>
+						<hr class="fancy">
+						<p class="small"> Detailed spec can be found <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#horizontalpodautoscaler-v2-autoscaling">here</a>.</p>
+						<div class="r-stack">
+							<pre class="yaml fragment">
+								<code data-line-numbers data-trim>
+
+								</code>
+							</pre>
+						</div>
+					</section>
+					<section>
+						Demo
 					</section>
 				</section>
 
@@ -495,10 +614,14 @@
 							</ul>
 						</aside>
 					</section>
+					<section>
+						Demo
+					</section>
 				</section>
 
-				<section class="small">
-					<p class="small"> Configuring authentication methods with TriggerAuthentications </p>
+				<section>
+					<section class="small">
+						<p class="small"> Configuring authentication methods with TriggerAuthentications </p>
 					<hr class="fancy">
 					<div style="margin-bottom: 10px;">
 						Spec with detailed explanation can be found <a href="https://keda.sh/docs/latest/concepts/authentication/"> here </a>.
@@ -889,7 +1012,12 @@
 											  version: {key-vault-secret-version}
 							</code>
 						</pre>
+					</div>
 					</section>
+					<section>
+						Demo
+					</section>
+				</section>
 
 				<section id="external-scaler">
 					<section id="external-scaler-overview">
@@ -901,7 +1029,7 @@
 							<li> For such use-cases, KEDA allows for pluggable scalers (referred to as <a href="https://keda.sh/docs/latest/concepts/external-scalers/">
 								external scalers
 							</a>) that can be used via <a href="https://grpc.io/"> gRPC</a>. </li>
-							<li> Users need to write an external scaler that exposes the metrics and implements a gRPC interface. </li>
+							<li> Users can implement an external scaler that exposes the metrics via a gRPC interface that KEDA will call. </li>
 							<li> These scalers can be in any language, not just Go. </li>
 							<li> In fact, users can override default scalers via external scalers. </li>
 						</ul>
@@ -983,7 +1111,8 @@
 						<li> No scaler for HTTP workloads. </li>
 						<li> Multi-cluster scaling not supported yet. </li>
 						<li>
-							Only one external metric server is supported in Kubernetes (<a href="https://github.com/kubernetes-sigs/custom-metrics-apiserver/issues/70"> issue</a>), consequently <span>&#8212;</span>
+							Only one external metric server is supported in Kubernetes 
+							(<a href="https://github.com/kubernetes-sigs/custom-metrics-apiserver/issues/70">upstream issue</a>), consequently <span>&#8212;</span>
 							<ul class="small">
 								<li> Cannot deploy multiple KEDA installations within a cluster. </li>
 								<li> Cannot be used with other custom / external metric servers. </li>
@@ -1067,6 +1196,7 @@
 		<script src="plugin/notes/notes.js"></script>
 		<script src="plugin/markdown/markdown.js"></script>
 		<script src="plugin/highlight/highlight.js"></script>
+		<script src="plugin/math/math.js"></script>
 		<script src="plugin/pdfexport/pdfexport.js"></script>
 		<script src="plugin/helpbutton/helpbutton.js"></script>
 		<script>
@@ -1079,7 +1209,7 @@
 				slideNumber: true,
 
 				// Learn about plugins: https://revealjs.com/plugins/
-				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, PdfExport, HelpButton]
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, PdfExport, HelpButton, RevealMath.KaTeX ]
 			});
 		</script>
 	</body>
