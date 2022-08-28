@@ -1,0 +1,33 @@
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: learning-day-ta
+spec:
+  podIdentity:
+    provider: azure-workload
+  azureKeyVault:
+    vaultUri: https://learningdaykv.vault.azure.net/
+    secrets:
+    - parameter: host
+      name: RMQHost
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: queue-func-so
+spec:
+  scaleTargetRef:
+    name: queue-func-deployment
+  pollingInterval: 10
+  cooldownPeriod: 30
+  idleReplicaCount: 0
+  minReplicaCount: 3
+  maxReplicaCount: 10
+  triggers:
+  - type: rabbitmq
+    metadata:
+      mode: QueueLength
+      queueName: "learning-day-queue"
+      value: "100"
+    authenticationRef:
+      name: learning-day-ta
