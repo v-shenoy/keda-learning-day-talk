@@ -26,3 +26,7 @@ $ npm start
 ```
 
 Visit `localhost:8000` to in your browser to view the slides.
+
+## Samples
+
+Code samples for the demo can be found under the [samples](./demo) folder.
