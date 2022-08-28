@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        envFrom:
+        - secretRef:
+            name: queue-func-secret
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: nginx-so
+spec:
+  scaleTargetRef:
+    name: nginx-deployment
+  pollingInterval: 10
+  cooldownPeriod: 30
+  idleReplicaCount: 0
+  minReplicaCount: 3
+  maxReplicaCount: 10
+  triggers:
+  - type: azure-queue
+    metadata:
+      queueName: learning-day-queue
+      activationQueueLength: "2"
+      queueLength: "3"
+      connectionFromEnv: AzureWebJobsStorage

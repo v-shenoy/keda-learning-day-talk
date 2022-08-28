@@ -1,0 +1,19 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: queue-func-so
+spec:
+  scaleTargetRef:
+    name: queue-func-deployment
+  pollingInterval: 10
+  cooldownPeriod: 30
+  idleReplicaCount: 0
+  minReplicaCount: 3
+  maxReplicaCount: 10
+  triggers:
+  - type: azure-queue
+    metadata:
+      queueName: learning-day-queue
+      activationQueueLength: "2"
+      queueLength: "3"
+      connectionFromEnv: AzureWebJobsStorage
