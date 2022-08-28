@@ -12,6 +12,8 @@ Tools used -
 The repository contains a PDF of the slides -  
 To view them in the browser, read the next section.
 
+PDF version of the slides can be found [here](./KEDA%20%E2%80%94%20Learning%20Day%20Talk.pdf)
+
 ### Viewing the slides in browser
 
 Clone the repo and run the following commands to start a web server.
