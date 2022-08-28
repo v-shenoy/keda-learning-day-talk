@@ -95,6 +95,7 @@
 						<li> GitHub Organization - <a href="https://github.com/kedacore"> github.com/kedacore </a></li>
 						<li> Main Repo - <a href="https://github.com/kedacore/keda"> kedacore/keda </a></li>
 						<li> Helm Charts - <a href="https://github.com/kedacore/charts"> kedacore/charts </a></li>
+						<li> KEDA at Microsoft - <a href="https://github.com/Azure/keda-at-microsoft"> Azure/keda-at-microsoft </a></li>
 						<li> <a href="https://www.cncf.io/projects/keda/">  CNCF Page </a></li>
 					</ul>
 				</section>
@@ -141,7 +142,7 @@
 							</li>
 							<li> Most cloud providers support ClusterAutoscalers along with cloud-specific configurations for scaling 
 								(<a href="https://docs.microsoft.com/en-us/azure/aks/cluster-autoscaler">doc</a>  for Azure). </li>
-							<li> A particular limitation is that the CAs do not check CPU / Memory usage. So, there might be pods that request								resources and are unused, which is inefficient.
+							<li> A particular limitation is that the CAs do not check CPU / Memory usage. So, there might be pods that request resources that are unused, which is inefficient.
 							</li>
 							<li> Slower than pod scaling because of the time to provision and add a node to the cluster. </li>
 						</ul>
@@ -173,6 +174,8 @@
 								<li> Recommender monitors utilization, looks at metric history, and lowers/ raises requests, limits. </li>
 								<li> Updater removes pods that need new resource limits. </li>
 								<li> Admission Controller changes CPU, memory settings before new pod starts after being evicted by updater. </li>
+								<li> Limitations - VPA can cause more resources to be recommended than available in the cluster causing pod to be unassigned. </li>
+								<li> Limitations- Cannot be used with HPA/</li>
 							</ul>
 						</aside>
 					</section>
@@ -221,20 +224,421 @@
 							<li> Resource metrics - CPU & Memory. Takes mean across all pods. </li>
 							<li> Custom Metrics - Metrics emitted from within the Kubernetes cluster </li>
 							<li> External metrics - Metrics emitted from outside the cluster. </li>
-							<li> </li>
+							<li> To use custom / external metrics you would require AWS Cloudwatch Adapter, Azure Metrics Adapter </li>
 						</ul>
 					</aside>
-					<section> 
+					<section class="small"> 
 						<p class="small"> HPA Spec. </p>
 						<hr class="fancy">
 						<p class="small"> Detailed spec can be found <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#horizontalpodautoscaler-v2-autoscaling">here</a>.</p>
 						<div class="r-stack">
 							<pre class="yaml fragment">
 								<code data-line-numbers data-trim>
+								apiVersion: autoscaling/v2beta2
+								kind: HorizontalPodAutoscaler
+								metadata:
+									name: sample-hpa
+								spec:
+									scaleTargetRef:
+										apiVersion: apps/v1
+										kind: Deployment
+										name: helloweb
+									minReplicas: 1
+									maxReplicas: 5
+									metrics:
+									- type: Resource
+									  resource:
+									  name: cpu
+									  target:
+									  type: Utilization
+									  averageUtilization: 30
+									- type: External
+									  external:
+									  	metric:
+											name: "queue_messages_ready"
+											selector:
+												matchLabels:
+													queue: "worker_tasks"
+										target:
+											type: AverageValue
+											averageValue: 30
+									behavior:
+										scaleDown:
+											stabilizationWindowSeconds: 300
+											policies:
+											- type: Percent
+										  	  value: 100
+										  	  periodSeconds: 15
+										scaleUp:
+											stabilizationWindowSeconds: 0
+											policies:
+											- type: Percent
+										      value: 100
+										      periodSeconds: 15
+											- type: Pods
+										      value: 4
+										      periodSeconds: 15
+										selectPolicy: Max
+								</code>
+							</pre>
 
+							<pre class="yaml fragment">
+								<code data-line-numbers="1-4" data-trim>
+								apiVersion: autoscaling/v2beta2
+								kind: HorizontalPodAutoscaler
+								metadata:
+									name: sample-hpa
+								spec:
+									scaleTargetRef:
+										apiVersion: apps/v1
+										kind: Deployment
+										name: helloweb
+									minReplicas: 1
+									maxReplicas: 5
+									metrics:
+									- type: Resource
+									  resource:
+									  name: cpu
+									  target:
+									  type: Utilization
+									  averageUtilization: 30
+									- type: External
+									  external:
+									  	metric:
+											name: "queue_messages_ready"
+											selector:
+												matchLabels:
+													queue: "worker_tasks"
+										target:
+											type: AverageValue
+											averageValue: 30
+									behavior:
+										scaleDown:
+											stabilizationWindowSeconds: 300
+											policies:
+											- type: Percent
+										  	  value: 100
+										  	  periodSeconds: 15
+										scaleUp:
+											stabilizationWindowSeconds: 0
+											policies:
+											- type: Percent
+										      value: 100
+										      periodSeconds: 15
+											- type: Pods
+										      value: 4
+										      periodSeconds: 15
+										selectPolicy: Max
+								</code>
+							</pre>
+
+							<pre class="yaml fragment">
+								<code data-line-numbers="5-9" data-trim>
+								apiVersion: autoscaling/v2beta2
+								kind: HorizontalPodAutoscaler
+								metadata:
+									name: sample-hpa
+								spec:
+									scaleTargetRef:
+										apiVersion: apps/v1
+										kind: Deployment
+										name: helloweb
+									minReplicas: 1
+									maxReplicas: 5
+									metrics:
+									- type: Resource
+									  resource:
+									  name: cpu
+									  target:
+									  type: Utilization
+									  averageUtilization: 30
+									- type: External
+									  external:
+									  	metric:
+											name: "queue_messages_ready"
+											selector:
+												matchLabels:
+													queue: "worker_tasks"
+										target:
+											type: AverageValue
+											averageValue: 30
+									behavior:
+										scaleDown:
+											stabilizationWindowSeconds: 300
+											policies:
+											- type: Percent
+										  	  value: 100
+										  	  periodSeconds: 15
+										scaleUp:
+											stabilizationWindowSeconds: 0
+											policies:
+											- type: Percent
+										      value: 100
+										      periodSeconds: 15
+											- type: Pods
+										      value: 4
+										      periodSeconds: 15
+										selectPolicy: Max
+								</code>
+							</pre>
+							<pre class="yaml fragment">
+								<code data-line-numbers="10-11" data-trim>
+								apiVersion: autoscaling/v2beta2
+								kind: HorizontalPodAutoscaler
+								metadata:
+									name: sample-hpa
+								spec:
+									scaleTargetRef:
+										apiVersion: apps/v1
+										kind: Deployment
+										name: helloweb
+									minReplicas: 1
+									maxReplicas: 5
+									metrics:
+									- type: Resource
+									  resource:
+									  name: cpu
+									  target:
+									  type: Utilization
+									  averageUtilization: 30
+									- type: External
+									  external:
+									  	metric:
+											name: "queue_messages_ready"
+											selector:
+												matchLabels:
+													queue: "worker_tasks"
+										target:
+											type: AverageValue
+											averageValue: 30
+									behavior:
+										scaleDown:
+											stabilizationWindowSeconds: 300
+											policies:
+											- type: Percent
+										  	  value: 100
+										  	  periodSeconds: 15
+										scaleUp:
+											stabilizationWindowSeconds: 0
+											policies:
+											- type: Percent
+										      value: 100
+										      periodSeconds: 15
+											- type: Pods
+										      value: 4
+										      periodSeconds: 15
+										selectPolicy: Max
+								</code>
+							</pre>
+							<pre class="yaml fragment">
+								<code data-line-numbers="12-18" data-trim>
+								apiVersion: autoscaling/v2beta2
+								kind: HorizontalPodAutoscaler
+								metadata:
+									name: sample-hpa
+								spec:
+									scaleTargetRef:
+										apiVersion: apps/v1
+										kind: Deployment
+										name: helloweb
+									minReplicas: 1
+									maxReplicas: 5
+									metrics:
+									- type: Resource
+									  resource:
+									  name: cpu
+									  target:
+									  type: Utilization
+									  averageUtilization: 30
+									- type: External
+									  external:
+									  	metric:
+											name: "queue_messages_ready"
+											selector:
+												matchLabels:
+													queue: "worker_tasks"
+										target:
+											type: AverageValue
+											averageValue: 30
+									behavior:
+										scaleDown:
+											stabilizationWindowSeconds: 300
+											policies:
+											- type: Percent
+										  	  value: 100
+										  	  periodSeconds: 15
+										scaleUp:
+											stabilizationWindowSeconds: 0
+											policies:
+											- type: Percent
+										      value: 100
+										      periodSeconds: 15
+											- type: Pods
+										      value: 4
+										      periodSeconds: 15
+										selectPolicy: Max
+								</code>
+							</pre>
+
+							<pre class="yaml fragment">
+								<code data-line-numbers="19-28" data-trim>
+								apiVersion: autoscaling/v2beta2
+								kind: HorizontalPodAutoscaler
+								metadata:
+									name: sample-hpa
+								spec:
+									scaleTargetRef:
+										apiVersion: apps/v1
+										kind: Deployment
+										name: helloweb
+									minReplicas: 1
+									maxReplicas: 5
+									metrics:
+									- type: Resource
+									  resource:
+									  name: cpu
+									  target:
+									  type: Utilization
+									  averageUtilization: 30
+									- type: External
+									  external:
+									  	metric:
+											name: "queue_messages_ready"
+											selector:
+												matchLabels:
+													queue: "worker_tasks"
+										target:
+											type: AverageValue
+											averageValue: 30
+									behavior:
+										scaleDown:
+											stabilizationWindowSeconds: 300
+											policies:
+											- type: Percent
+										  	  value: 100
+										  	  periodSeconds: 15
+										scaleUp:
+											stabilizationWindowSeconds: 0
+											policies:
+											- type: Percent
+										      value: 100
+										      periodSeconds: 15
+											- type: Pods
+										      value: 4
+										      periodSeconds: 15
+										selectPolicy: Max
+								</code>
+							</pre>
+
+							<pre class="yaml fragment">
+								<code data-line-numbers="29-35" data-trim>
+								apiVersion: autoscaling/v2beta2
+								kind: HorizontalPodAutoscaler
+								metadata:
+									name: sample-hpa
+								spec:
+									scaleTargetRef:
+										apiVersion: apps/v1
+										kind: Deployment
+										name: helloweb
+									minReplicas: 1
+									maxReplicas: 5
+									metrics:
+									- type: Resource
+									  resource:
+									  name: cpu
+									  target:
+									  type: Utilization
+									  averageUtilization: 30
+									- type: External
+									  external:
+									  	metric:
+											name: "queue_messages_ready"
+											selector:
+												matchLabels:
+													queue: "worker_tasks"
+										target:
+											type: AverageValue
+											averageValue: 30
+									behavior:
+										scaleDown:
+											stabilizationWindowSeconds: 300
+											policies:
+											- type: Percent
+										  	  value: 100
+										  	  periodSeconds: 15
+										scaleUp:
+											stabilizationWindowSeconds: 0
+											policies:
+											- type: Percent
+										      value: 100
+										      periodSeconds: 15
+											- type: Pods
+										      value: 4
+										      periodSeconds: 15
+										selectPolicy: Max
+								</code>
+							</pre>
+
+							<pre class="yaml fragment">
+								<code data-line-numbers="36-45" data-trim>
+								apiVersion: autoscaling/v2beta2
+								kind: HorizontalPodAutoscaler
+								metadata:
+									name: sample-hpa
+								spec:
+									scaleTargetRef:
+										apiVersion: apps/v1
+										kind: Deployment
+										name: helloweb
+									minReplicas: 1
+									maxReplicas: 5
+									metrics:
+									- type: Resource
+									  resource:
+									  name: cpu
+									  target:
+									  type: Utilization
+									  averageUtilization: 30
+									- type: External
+									  external:
+									  	metric:
+											name: "queue_messages_ready"
+											selector:
+												matchLabels:
+													queue: "worker_tasks"
+										target:
+											type: AverageValue
+											averageValue: 30
+									behavior:
+										scaleDown:
+											stabilizationWindowSeconds: 300
+											policies:
+											- type: Percent
+										  	  value: 100
+										  	  periodSeconds: 15
+										scaleUp:
+											stabilizationWindowSeconds: 0
+											policies:
+											- type: Percent
+										      value: 100
+										      periodSeconds: 15
+											- type: Pods
+										      value: 4
+										      periodSeconds: 15
+										selectPolicy: Max
 								</code>
 							</pre>
 						</div>
+
+						<aside class="notes">
+							<li>
+								StabilizationWindow is used to prevent flapping, as the metrics might be continuously changing.
+							</li>
+							<li>
+								Selection policy min = minimum change in replicas, max = maximum change in replicas, disabled = disabled in that direction
+							</li>
+						</aside>
 					</section>
 					<section>
 						Demo
