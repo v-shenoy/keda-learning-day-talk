@@ -4,7 +4,7 @@ type: Opaque
 metadata:
   name: queue-func-secret
 data:
-  ConnString: <queue-connection-string>
+  ConnString: <rabbitmq-connection-string>
 ---
 apiVersion: apps/v1
 kind: Deployment
